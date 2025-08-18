@@ -128,6 +128,7 @@ exports.Prisma.CustomerScalarFieldEnum = {
   address: 'address',
   city: 'city',
   country: 'country',
+  rol: 'rol',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

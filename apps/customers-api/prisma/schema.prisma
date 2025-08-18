@@ -20,6 +20,7 @@ model Customer {
   address   String?
   city      String?
   country   String?
+  rol       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -31,13 +32,13 @@ model Customer {
 
 // Order model (relacionado con customers)
 model Order {
-  id         String      @id @default(cuid())
-  orderNumber String     @unique
-  customerId String
-  status     OrderStatus @default(PENDING)
-  total      Float
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  orderNumber String      @unique
+  customerId  String
+  status      OrderStatus @default(PENDING)
+  total       Float
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   // Relations
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)

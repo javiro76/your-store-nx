@@ -1,9 +1,9 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '../../generated/customers-client';
 
 @Injectable()
 export class CustomersService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  
+
   async onModuleInit() {
     await this.$connect();
   }
@@ -13,14 +13,7 @@ export class CustomersService extends PrismaClient implements OnModuleInit, OnMo
   }
 
   // Crear un nuevo customer
-  async createCustomer(data: {
-    email: string;
-    name: string;
-    phone?: string;
-    address?: string;
-    city?: string;
-    country?: string;
-  }) {
+  async createCustomer(data: Prisma.CustomerCreateInput) {
     return this.customer.create({
       data,
     });
