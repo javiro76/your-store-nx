@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  customers-api:
+    build:
+      context: .
+      dockerfile: apps/customers-api/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - CUSTOMERS_DATABASE_URL=postgresql://user:password@customers-db:5432/customers_db
+    depends_on:
+      - customers-db
+    # volumes:
+      # Opcional: Para desarrollo con hot reload
+      # - ./apps/customers-api/src:/app/src
+    restart: unless-stopped
+
+  # Base de datos de customers
+  customers-db:
+    image: postgres:15-alpine
+    container_name: customers-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: customers_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - customers_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d customers_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  customers_db_data:

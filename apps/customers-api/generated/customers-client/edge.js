@@ -163,6 +163,10 @@ const config = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -170,8 +174,7 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.14.0",
@@ -180,6 +183,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -188,8 +192,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file for customers-api\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/customers-client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"CUSTOMERS_DATABASE_URL\")\n}\n\n// Customer model\nmodel Customer {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  name      String\n  phone     String?\n  address   String?\n  city      String?\n  country   String?\n  rol       String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Relations\n  orders Order[]\n\n  @@map(\"customers\")\n}\n\n// Order model (relacionado con customers)\nmodel Order {\n  id          String      @id @default(cuid())\n  orderNumber String      @unique\n  customerId  String\n  status      OrderStatus @default(PENDING)\n  total       Float\n  createdAt   DateTime    @default(now())\n  updatedAt   DateTime    @updatedAt\n\n  // Relations\n  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)\n\n  @@map(\"orders\")\n}\n\n// Enum for order status\nenum OrderStatus {\n  PENDING\n  PROCESSING\n  SHIPPED\n  DELIVERED\n  CANCELLED\n}\n",
-  "inlineSchemaHash": "5eb35aa8daaa26425ba11ee09d476eb8da5e0ec8a42fd14e8dbf2e97667dbf0e",
+  "inlineSchema": "// This is your Prisma schema file for customers-api\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../generated/customers-client\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"CUSTOMERS_DATABASE_URL\")\n}\n\n// Customer model\nmodel Customer {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  name      String\n  phone     String?\n  address   String?\n  city      String?\n  country   String?\n  rol       String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Relations\n  orders Order[]\n\n  @@map(\"customers\")\n}\n\n// Order model (relacionado con customers)\nmodel Order {\n  id          String      @id @default(cuid())\n  orderNumber String      @unique\n  customerId  String\n  status      OrderStatus @default(PENDING)\n  total       Float\n  createdAt   DateTime    @default(now())\n  updatedAt   DateTime    @updatedAt\n\n  // Relations\n  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)\n\n  @@map(\"orders\")\n}\n\n// Enum for order status\nenum OrderStatus {\n  PENDING\n  PROCESSING\n  SHIPPED\n  DELIVERED\n  CANCELLED\n}\n",
+  "inlineSchemaHash": "049a3489d2e71aa73bc04bbc6c316ed6fa493c4820ab02b86667b147a93848a2",
   "copyEngine": true
 }
 config.dirname = '/'

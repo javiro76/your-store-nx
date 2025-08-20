@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Nginx Proxy Reverso
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - customers-api
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # API de Customers
+  customers-api:
+    build:
+      context: .
+      dockerfile: apps/customers-api/Dockerfile
+      target: production
+    container_name: customers-api
+    environment:
+      - NODE_ENV=production
+      - CUSTOMERS_DATABASE_URL=${CUSTOMERS_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - API_PORT=3000
+    depends_on:
+      customers-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Base de datos PostgreSQL
+  customers-db:
+    image: postgres:15-alpine
+    container_name: customers-db-prod
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-backups:/backups
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No exponer puerto en producción (solo acceso interno)
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

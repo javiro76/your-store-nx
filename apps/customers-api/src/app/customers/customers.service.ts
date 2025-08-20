@@ -11,24 +11,35 @@ export class CustomersService {
 
 
   async create(createCustomerDto: CreateCustomerDto) {
-    return this.prisma.customer.create({
+    return await this.prisma.customer.create({
       data: createCustomerDto,
     });
   }
 
-  findAll() {
-    return `This action returns all customers`;
+  async findAll() {
+    return await this.prisma.customer.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} customer`;
+  async findOne(id: string) {
+    return await this.prisma.customer.findUnique({
+      where: {
+        id
+      }
+    });
   }
 
-  update(id: number, updateCustomerDto: UpdateCustomerDto) {
-    return `This action updates a #${id} customer`;
+  async update(id: string, updateCustomerDto: UpdateCustomerDto) {
+    return await this.prisma.customer.update({
+      where: { id },
+      data: updateCustomerDto
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} customer`;
+  async remove(id: string) {
+    return await this.prisma.customer.delete({
+      where: {
+        id
+      }
+    });
   }
 }

@@ -2,7 +2,9 @@
   "name": "@your-store-nx/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev:customers": "npx nx serve customers-api"
+  },
   "private": true,
   "dependencies": {
     "@nestjs/common": "^11.0.0",
