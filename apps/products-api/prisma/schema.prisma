@@ -1,6 +1,3 @@
-// This is your Prisma schema file for products-api
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider      = "prisma-client-js"
   output        = "../generated/products-client"
@@ -12,21 +9,18 @@ datasource db {
   url      = env("PRODUCTS_DATABASE_URL")
 }
 
-// Products model
 model Product {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   description String?
   price       Float
   stock       Int
   brand       String
-  category    Category @relation(fields: [categoryId], references: [id])
   categoryId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relaciones
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   orders      OrderItem[]
+  category    Category       @relation(fields: [categoryId], references: [id])
   images      ProductImage[]
 }
 
@@ -37,26 +31,25 @@ model Category {
 }
 
 model ProductImage {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   url       String
-  product   Product  @relation(fields: [productId], references: [id])
   productId String
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  orderDate  DateTime    @default(now())
-  total      Float
-  items      OrderItem[]
-  // Puedes agregar relación con usuario/cliente si lo necesitas
+  id        String      @id @default(cuid())
+  orderDate DateTime    @default(now())
+  total     Float
+  items     OrderItem[]
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  order     Order    @relation(fields: [orderId], references: [id])
+  id        String  @id @default(cuid())
   orderId   String
-  product   Product  @relation(fields: [productId], references: [id])
   productId String
   quantity  Int
   price     Float
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 }

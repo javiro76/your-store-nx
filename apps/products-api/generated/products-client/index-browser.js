@@ -120,26 +120,41 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.CustomerScalarFieldEnum = {
+exports.Prisma.ProductScalarFieldEnum = {
   id: 'id',
-  email: 'email',
   name: 'name',
-  phone: 'phone',
-  address: 'address',
-  city: 'city',
-  country: 'country',
+  description: 'description',
+  price: 'price',
+  stock: 'stock',
+  brand: 'brand',
+  categoryId: 'categoryId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name'
+};
+
+exports.Prisma.ProductImageScalarFieldEnum = {
+  id: 'id',
+  url: 'url',
+  productId: 'productId'
+};
+
 exports.Prisma.OrderScalarFieldEnum = {
   id: 'id',
-  orderNumber: 'orderNumber',
-  customerId: 'customerId',
-  status: 'status',
-  total: 'total',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  orderDate: 'orderDate',
+  total: 'total'
+};
+
+exports.Prisma.OrderItemScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  productId: 'productId',
+  quantity: 'quantity',
+  price: 'price'
 };
 
 exports.Prisma.SortOrder = {
@@ -156,17 +171,14 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.OrderStatus = exports.$Enums.OrderStatus = {
-  PENDING: 'PENDING',
-  PROCESSING: 'PROCESSING',
-  SHIPPED: 'SHIPPED',
-  DELIVERED: 'DELIVERED',
-  CANCELLED: 'CANCELLED'
-};
+
 
 exports.Prisma.ModelName = {
-  Customer: 'Customer',
-  Order: 'Order'
+  Product: 'Product',
+  Category: 'Category',
+  ProductImage: 'ProductImage',
+  Order: 'Order',
+  OrderItem: 'OrderItem'
 };
 
 /**
