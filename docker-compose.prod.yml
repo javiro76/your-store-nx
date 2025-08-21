@@ -13,6 +13,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - customers-api
+      - products-api
     restart: unless-stopped
     networks:
       - app-network
@@ -42,30 +43,104 @@ services:
       retries: 3
       start_period: 40s
 
+  # API de Products
+  products-api:
+    build:
+      context: .
+      dockerfile: apps/products-api/Dockerfile
+      target: production
+    container_name: products-api
+    environment:
+      - NODE_ENV=production
+      - PRODUCTS_DATABASE_URL=${PRODUCTS_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - API_PORT=3000
+    depends_on:
+      products-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # Base de datos PostgreSQL
   customers-db:
     image: postgres:15-alpine
     container_name: customers-db-prod
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${CUSTOMERS_DB_USER}
+      POSTGRES_PASSWORD: ${CUSTOMERS_DB_PASSWORD}
+      POSTGRES_DB: ${CUSTOMERS_DB_NAME}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db-backups:/backups
+      - customers_postgres_data:/var/lib/postgresql/data
+      - ./db-backups/customers:/backups
     restart: unless-stopped
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${CUSTOMERS_DB_USER} -d ${CUSTOMERS_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  products-db:
+    image: postgres:15-alpine
+    container_name: products-db-prod
+    environment:
+      POSTGRES_USER: ${PRODUCTS_DB_USER}
+      POSTGRES_PASSWORD: ${PRODUCTS_DB_PASSWORD}
+      POSTGRES_DB: ${PRODUCTS_DB_NAME}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - products_postgres_data:/var/lib/postgresql/data
+      - ./db-backups/products:/backups
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PRODUCTS_DB_USER} -d ${PRODUCTS_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
     # No exponer puerto en producción (solo acceso interno)
 
+  # Servicio para ejecutar seeds y migraciones
+  db-setup:
+    build:
+      context: .
+      dockerfile: apps/products-api/Dockerfile
+      target: production
+    container_name: db-setup
+    environment:
+      - NODE_ENV=production
+      - CUSTOMERS_DATABASE_URL=${CUSTOMERS_DATABASE_URL}
+      - PRODUCTS_DATABASE_URL=${PRODUCTS_DATABASE_URL}
+    depends_on:
+      customers-db:
+        condition: service_healthy
+      products-db:
+        condition: service_healthy
+    command: |
+      sh -c "
+        echo 'Running database migrations and seeds...'
+        cd /app/apps/customers-api && npx prisma migrate deploy
+        cd /app/apps/products-api && npx prisma migrate deploy
+        cd /app/apps/products-api && npx prisma db seed
+        echo 'Database setup completed!'
+      "
+    networks:
+      - app-network
+    restart: "no"
+
 volumes:
-  postgres_data:
+  customers_postgres_data:
+    driver: local
+  products_postgres_data:
     driver: local
 
 networks:

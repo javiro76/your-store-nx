@@ -9,6 +9,14 @@ datasource db {
   url      = env("PRODUCTS_DATABASE_URL")
 }
 
+// Seed configuration
+generator seed {
+  provider = "prisma-seed"
+}
+
+// This is the prisma seed configuration
+// Run with: npx prisma db seed
+
 model Product {
   id          String         @id @default(cuid())
   name        String
