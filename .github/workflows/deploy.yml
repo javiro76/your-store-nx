@@ -21,8 +21,7 @@ jobs:
         service: [customers-api, products-api]
     
     outputs:
-      customers-tag: ${{ steps.meta-customers.outputs.tags }}
-      products-tag: ${{ steps.meta-products.outputs.tags }}
+      image-tags: ${{ steps.meta.outputs.tags }}
     
     steps:
       - name: 🚚 Checkout code
@@ -35,7 +34,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: 📋 Extract metadata for ${{ matrix.service }}
-        id: meta-${{ matrix.service }}
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
@@ -51,8 +50,8 @@ jobs:
           context: .
           file: ./apps/${{ matrix.service }}/Dockerfile
           push: true
-          tags: ${{ steps.meta-${{ matrix.service }}.outputs.tags }}
-          labels: ${{ steps.meta-${{ matrix.service }}.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
