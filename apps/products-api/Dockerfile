@@ -33,7 +33,7 @@ RUN npm ci --omit=dev
 # Copia el schema de Prisma para poder ejecutar migraciones
 COPY --from=builder /app/apps/products-api/prisma ./apps/products-api/prisma
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Script de inicio que ejecuta migraciones, siembra los datos y luego la aplicación
 CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/products-api/prisma/schema.prisma && node apps/products-api/prisma/seed.js && node dist/main.js"]
