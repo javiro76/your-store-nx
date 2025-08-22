@@ -20,10 +20,7 @@ services:
 
   # API de Customers
   customers-api:
-    build:
-      context: .
-      dockerfile: apps/customers-api/Dockerfile
-      target: production
+    image: ${DOCKERHUB_USERNAME:-your-username}/customers-api:latest
     container_name: customers-api
     environment:
       - NODE_ENV=production
@@ -45,16 +42,13 @@ services:
 
   # API de Products
   products-api:
-    build:
-      context: .
-      dockerfile: apps/products-api/Dockerfile
-      target: production
+    image: ${DOCKERHUB_USERNAME:-your-username}/products-api:latest
     container_name: products-api
     environment:
       - NODE_ENV=production
       - PRODUCTS_DATABASE_URL=${PRODUCTS_DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
-      - API_PORT=3000
+      - API_PORT=3001
     depends_on:
       products-db:
         condition: service_healthy
@@ -62,7 +56,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3

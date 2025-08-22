@@ -1,0 +1,177 @@
+name: 🚀 Deploy to DigitalOcean Droplet
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Permite ejecutar manualmente
+
+env:
+  REGISTRY: docker.io
+  IMAGE_PREFIX: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  # Job 1: Build y Push de las imágenes Docker
+  build-and-push:
+    name: 🐳 Build & Push Docker Images
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service: [customers-api, products-api]
+    
+    outputs:
+      customers-tag: ${{ steps.meta-customers.outputs.tags }}
+      products-tag: ${{ steps.meta-products.outputs.tags }}
+    
+    steps:
+      - name: 🚚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 📋 Extract metadata for ${{ matrix.service }}
+        id: meta-${{ matrix.service }}
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🏗️ Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta-${{ matrix.service }}.outputs.tags }}
+          labels: ${{ steps.meta-${{ matrix.service }}.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 2: Deploy al servidor
+  deploy:
+    name: 🚀 Deploy to Server
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    
+    steps:
+      - name: 🚚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Deploy to Droplet
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment..."
+            
+            # Crear directorio del proyecto si no existe
+            mkdir -p ~/your-store-nx
+            cd ~/your-store-nx
+            
+            # Clonar o actualizar el repositorio
+            if [ ! -d ".git" ]; then
+              echo "📥 Cloning repository..."
+              git clone https://github.com/${{ github.repository }} .
+            else
+              echo "🔄 Updating repository..."
+              git fetch origin
+              git reset --hard origin/main
+            fi
+            
+            # Verificar que existe el archivo de producción
+            if [ ! -f ".env.prod" ]; then
+              echo "❌ ERROR: .env.prod file not found!"
+              echo "Please create .env.prod file with your production secrets"
+              exit 1
+            fi
+            
+            # Login a Docker Hub en el servidor
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            
+            # Detener servicios actuales
+            echo "⏹️ Stopping current services..."
+            docker-compose -f docker-compose.prod.yml down --remove-orphans || true
+            
+            # Pull de las nuevas imágenes
+            echo "📥 Pulling new images..."
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/customers-api:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/products-api:latest
+            
+            # Iniciar servicios con las nuevas imágenes
+            echo "🚀 Starting services..."
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+            
+            # Esperar a que los servicios estén listos
+            echo "⏳ Waiting for services to be healthy..."
+            sleep 30
+            
+            # Verificar estado de los servicios
+            echo "📊 Service status:"
+            docker-compose -f docker-compose.prod.yml ps
+            
+            # Limpiar imágenes antiguas
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
+            
+            echo "✅ Deployment completed successfully!"
+
+      - name: 🔍 Health Check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ~/your-store-nx
+            
+            echo "🏥 Performing health checks..."
+            
+            # Verificar que los contenedores estén corriendo
+            if ! docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+              echo "❌ Some services are not running!"
+              docker-compose -f docker-compose.prod.yml logs --tail=20
+              exit 1
+            fi
+            
+            # Verificar conectividad HTTP (si nginx está configurado)
+            if curl -f -s http://localhost:80 > /dev/null; then
+              echo "✅ HTTP endpoint is responding"
+            else
+              echo "⚠️ HTTP endpoint not responding (this might be expected if SSL is required)"
+            fi
+            
+            echo "✅ Health checks completed!"
+
+  # Job 3: Notificación de resultado
+  notify:
+    name: 📢 Notify Result
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy]
+    if: always()
+    
+    steps:
+      - name: 📢 Deployment Success
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "✅ Deployment succeeded!"
+          echo "🚀 Your application is now live!"
+          
+      - name: 📢 Deployment Failed
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Please check the logs and fix the issues."
+          exit 1
