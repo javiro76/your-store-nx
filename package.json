@@ -21,6 +21,9 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
   },
+  "prisma": {
+    "seed": "node apps/products-api/prisma/seed.js"
+  },
   "devDependencies": {
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",

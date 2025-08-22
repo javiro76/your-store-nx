@@ -24,8 +24,12 @@ COPY --from=builder /app/dist/apps/products-api ./dist
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 
+
 # Copia el cliente generado de Prisma y sus engines
 COPY --from=builder /app/apps/products-api/generated/products-client ./apps/products-api/generated/products-client
+
+# Copia el seed compilado (asegúrate de que seed.ts esté en src/prisma y se compile a dist)
+COPY --from=builder /app/dist/apps/products-api/prisma/seed.js ./apps/products-api/prisma/seed.js
 
 # Instala solo dependencias de producción
 RUN npm ci --omit=dev
@@ -36,4 +40,4 @@ COPY --from=builder /app/apps/products-api/prisma ./apps/products-api/prisma
 EXPOSE 3001
 
 # Script de inicio que ejecuta migraciones, siembra los datos y luego la aplicación
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/products-api/prisma/schema.prisma && node apps/products-api/prisma/seed.js && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/products-api/prisma/schema.prisma && npx prisma db seed --schema=apps/products-api/prisma/schema.prisma && node dist/main.js"]
