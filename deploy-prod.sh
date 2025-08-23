@@ -1,4 +1,8 @@
+
 #!/bin/bash
+
+# Ir siempre a la carpeta donde está este script (raíz del proyecto)
+cd "$(dirname "$0")"
 
 # Production Deployment Script for Your Store NX
 echo "🚀 Starting production deployment..."
