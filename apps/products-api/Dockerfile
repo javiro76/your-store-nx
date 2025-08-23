@@ -28,8 +28,8 @@ COPY --from=builder /app/package-lock.json ./
 # Copia el cliente generado de Prisma y sus engines
 COPY --from=builder /app/apps/products-api/generated/products-client ./apps/products-api/generated/products-client
 
-# Copia el seed compilado (asegúrate de que seed.ts esté en src/prisma y se compile a dist)
-COPY --from=builder /app/dist/apps/products-api/prisma/seed.js ./apps/products-api/prisma/seed.js
+# Copia el seed.js directamente desde la fuente
+COPY --from=builder /app/apps/products-api/prisma/seed.js ./apps/products-api/prisma/seed.js
 
 # Instala solo dependencias de producción
 RUN npm ci --omit=dev
