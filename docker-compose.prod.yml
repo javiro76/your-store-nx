@@ -108,7 +108,6 @@ services:
     build:
       context: .
       dockerfile: apps/products-api/Dockerfile
-      target: production
     container_name: db-setup
     environment:
       - NODE_ENV=production
