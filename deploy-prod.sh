@@ -4,8 +4,27 @@
 # Ir siempre a la carpeta donde está este script (raíz del proyecto)
 cd "$(dirname "$0")"
 
+
 # Production Deployment Script for Your Store NX
 echo "🚀 Starting production deployment..."
+
+# --- BLOQUE MEJORADO DE CLONACIÓN/ACTUALIZACIÓN DEL REPO ---
+# Si no existe .git, hace backup de .env.prod, borra todo, clona y restaura .env.prod
+if [ ! -d ".git" ]; then
+    echo "🔧 Inicializando repositorio git en el servidor..."
+    if [ -f .env.prod ]; then
+        cp .env.prod /tmp/env_backup
+    fi
+    rm -rf ./*
+    git clone https://github.com/javiro76/your-store-nx.git .
+    if [ -f /tmp/env_backup ]; then
+        mv /tmp/env_backup .env.prod
+    fi
+else
+    echo "🔄 Actualizando repositorio..."
+    git fetch origin
+    git reset --hard origin/main
+fi
 
 # Check if .env.prod exists
 if [ ! -f ".env.prod" ]; then
