@@ -102,7 +102,7 @@ jobs:
                 echo "❌ .env.prod file not found!"
                 echo "📋 Please copy .env.prod.example to .env.prod and fill in your values"
                 exit 1
-            fi
+              fi
             fi
 
             # Login a Docker Hub en el servidor

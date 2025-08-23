@@ -20,7 +20,7 @@ services:
 
   # API de Customers
   customers-api:
-    image: ${DOCKERHUB_USERNAME:-your-username}/customers-api:latest
+    image: ${DOCKERHUB_USERNAME:-javiro76}/customers-api:latest
     container_name: customers-api
     environment:
       - NODE_ENV=production
@@ -42,7 +42,7 @@ services:
 
   # API de Products
   products-api:
-    image: ${DOCKERHUB_USERNAME:-your-username}/products-api:latest
+    image: ${DOCKERHUB_USERNAME:-javiro76}/products-api:latest
     container_name: products-api
     environment:
       - NODE_ENV=production
